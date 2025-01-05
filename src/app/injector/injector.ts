@@ -75,7 +75,7 @@ export class Injector {
     const existingProvider = this.resolvers.get(config.useExisting);
 
     if (!existingProvider) {
-      throw new Error(`NullInjectorError: No provider for ${config.useExisting}!`);
+      throw new Error(`NullInjectorError: No provider for ${getTokenName(config.useExisting)}!`);
     }
 
     this.resolvers.set(config.provide, existingProvider);

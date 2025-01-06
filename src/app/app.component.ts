@@ -27,14 +27,15 @@ class Parent {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent {
-  constructor(private readonly injector: Injector) {
+  constructor(private injector: Injector) {
     this.init();
   }
 
   init(): void {
-    this.injector.provide(Parent);
     this.injector.provide(Child1);
     this.injector.provide(Child2);
+    this.injector.provide({ provide: Parent, useClass: Parent });
+
     console.log(this.injector.get(Parent));
   }
 }

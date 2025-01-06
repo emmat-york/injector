@@ -9,13 +9,13 @@ export class Injector {
   private readonly resolvers = new Map<ProviderToken, unknown>();
 
   provide(config: ProviderConfig): void {
-    // Чек на существование токена
-    if (typeof config === 'function') {
-      this.providers.set(config, config);
-      return;
+    const providerToken = typeof config === 'function' ? config : config.provide;
+
+    if (this.resolvers.has(providerToken)) {
+      this.resolvers.delete(providerToken);
     }
 
-    this.providers.set(config.provide, config);
+    this.providers.set(providerToken, config);
   }
 
   get(token: ProviderToken): any {

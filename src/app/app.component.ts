@@ -1,17 +1,22 @@
-import {Component} from '@angular/core';
+import {ChangeDetectionStrategy, Component} from '@angular/core';
 import {Injector} from "./injector/injector";
 import {Service} from "./injector/injector.util";
 
 @Service()
-class Class2 {
-  readonly class2 = 'class2';
+export class Child1 {
+  readonly child1 = 'Child1';
 }
 
 @Service()
-class Class1 {
+class Child2 {
+  readonly child2 = 'Child2';
+}
+
+@Service()
+class Parent {
   readonly class1 = 'class1';
 
-  constructor(private dep: Class2) {}
+  constructor(private dep1: Child1, private dep2: Child2 ) {}
 }
 
 @Component({
@@ -19,15 +24,17 @@ class Class1 {
   standalone: true,
   templateUrl: 'app.component.html',
   styleUrl: 'app.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent {
-  constructor(private readonly customInjector: Injector) {
+  constructor(private readonly injector: Injector) {
     this.init();
   }
 
   init(): void {
-    this.customInjector.provide(Class1);
-    this.customInjector.provide(Class2);
-    console.log(this.customInjector.get(Class1));
+    this.injector.provide(Parent);
+    this.injector.provide(Child1);
+    this.injector.provide(Child2);
+    console.log(this.injector.get(Parent));
   }
 }

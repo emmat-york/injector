@@ -9,6 +9,7 @@ export class Injector {
   private readonly resolvers = new Map<ProviderToken, unknown>();
 
   provide(config: ProviderConfig): void {
+    // Чек на существование токена
     if (typeof config === 'function') {
       this.providers.set(config, config);
       return;
@@ -18,10 +19,10 @@ export class Injector {
   }
 
   get(token: ProviderToken): any {
-    const resolvedDependency = this.resolvers.get(token);
+    const resolver = this.resolvers.get(token);
 
-    if (resolvedDependency) {
-      return resolvedDependency;
+    if (resolver) {
+      return resolver;
     } else {
       this.resolve(token);
     }
@@ -52,19 +53,8 @@ export class Injector {
   private resolveUseFactory(config: FactoryProvider): void {
     const depsList = config.deps ?? [];
 
-    if (depsList.length) { // to do
-      const resolvedDeps = depsList.map(token => {
-        const provider = this.providers.get(token);
-
-        if (provider) {
-          if (typeof token === 'function') {
-
-          }
-        } else {
-          throw new Error(`NullInjectorError: No provider for ${getTokenName(token)}!`);
-        }
-      });
-
+    if (depsList.length) {
+      const resolvedDeps = depsList.map(token => this.get(token));
       this.resolvers.set(config.provide, config.useFactory(...resolvedDeps));
     } else {
       this.resolvers.set(config.provide, config.useFactory());
@@ -91,7 +81,7 @@ export class Injector {
         if (provider) {
           return this.createClassInstance(provider as Constructor);
         } else {
-          throw new Error(`NullInjectorError: No provider for ${token.name}!`);
+          throw new Error(`NullInjectorError: No provider for ${getTokenName(token)}!`);
         }
       });
 

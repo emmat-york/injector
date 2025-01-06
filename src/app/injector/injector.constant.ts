@@ -1,7 +1,7 @@
 export class InjectionToken<T> {
-  readonly token: string;
+  readonly id: string;
 
-  constructor(token: string) {
-    this.token = token;
+  constructor(id: string) {
+    this.id = id;
   }
 }

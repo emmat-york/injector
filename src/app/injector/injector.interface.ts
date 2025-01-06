@@ -8,7 +8,7 @@ export type ValueProvider = { provide: ProviderToken; useValue: unknown; };
 export type ExistingProvider = { provide: ProviderToken; useExisting: ProviderToken; };
 export type FactoryProvider = {
   provide: ProviderToken;
-  useFactory: (...args: unknown[]) => unknown;
+  useFactory: (...args: any[]) => unknown;
   deps?: ProviderToken[];
 };
 

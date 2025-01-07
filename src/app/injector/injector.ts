@@ -1,12 +1,34 @@
 import 'reflect-metadata';
-import {Constructor, ExistingProvider, FactoryProvider, ProviderConfig, ProviderToken} from "./injector.interface";
-import {Injectable} from "@angular/core";
-import {getTokenName} from "./injector.util";
+import {
+  Constructor,
+  ExistingProvider,
+  ExtractProviderTokenType,
+  FactoryProvider,
+  ProviderConfig,
+  ProviderToken,
+  UseClassProviderConfig,
+} from './injector.interface';
+import { getTokenName } from './injector.util';
 
-@Injectable()
-export class Injector {
-  private readonly providers = new Map<ProviderToken, ProviderConfig>();
-  private readonly resolvers = new Map<ProviderToken, unknown>();
+export class IoCContainer {
+  private readonly providers = new Map<ProviderToken<unknown>, ProviderConfig>();
+  private readonly resolvers = new Map<ProviderToken<unknown>, unknown>();
+
+  provide(constructor: Constructor): void;
+  provide<T extends ProviderToken<unknown>, V extends Constructor>(config: UseClassProviderConfig<T, V>): void;
+  provide<T extends ProviderToken<unknown>, V extends ExtractProviderTokenType<T>>(config: {
+    provide: T;
+    useValue: V;
+  }): void;
+  provide<T extends ProviderToken<unknown>, V extends ProviderToken<unknown>>(config: {
+    provide: T;
+    useExisting: V;
+  }): void;
+  provide<T extends ProviderToken<unknown>, V extends ExtractProviderTokenType<T>>(config: {
+    provide: T;
+    useFactory: (...args: any[]) => V;
+    deps?: ProviderToken<unknown>[];
+  }): void;
 
   provide(config: ProviderConfig): void {
     const providerToken = typeof config === 'function' ? config : config.provide;
@@ -18,7 +40,7 @@ export class Injector {
     this.providers.set(providerToken, config);
   }
 
-  get(token: ProviderToken): any {
+  get(token: ProviderToken<unknown>): any {
     const resolver = this.resolvers.get(token);
 
     if (resolver) {
@@ -30,7 +52,7 @@ export class Injector {
     return this.resolvers.get(token);
   }
 
-  private resolve(token: ProviderToken): void {
+  private resolve(token: ProviderToken<unknown>): void {
     const providerConfig = this.providers.get(token);
 
     if (!providerConfig) {
@@ -50,18 +72,18 @@ export class Injector {
     }
   }
 
-  private resolveUseFactory(config: FactoryProvider): void {
+  private resolveUseFactory(config: FactoryProvider<unknown>): void {
     const depsList = config.deps ?? [];
 
     if (depsList.length) {
-      const resolvedDeps = depsList.map(token => this.get(token));
+      const resolvedDeps = depsList.map((token) => this.get(token));
       this.resolvers.set(config.provide, config.useFactory(...resolvedDeps));
     } else {
       this.resolvers.set(config.provide, config.useFactory());
     }
   }
 
-  private resolveUseExisting(config: ExistingProvider): void {
+  private resolveUseExisting(config: ExistingProvider<unknown>): void {
     const existingProvider = this.resolvers.get(config.useExisting);
 
     if (!existingProvider) {
@@ -74,20 +96,18 @@ export class Injector {
   private createClassInstance(constructor: Constructor): object {
     const depsList: Constructor[] = Reflect.getMetadata('design:paramtypes', constructor) ?? [];
 
-    if (depsList.length) {
-      const resolvedDeps = depsList.map((token) => {
-        const provider = this.providers.get(token);
+    const resolvedDeps = depsList.map((dependency) => {
+      const provider = this.providers.get(dependency);
 
-        if (provider) {
-          return this.createClassInstance(provider as Constructor);
-        } else {
-          throw new Error(`NullInjectorError: No provider for ${getTokenName(token)}!`);
-        }
-      });
+      if (provider) {
+        return this.createClassInstance(provider as Constructor);
+      } else {
+        throw new Error(`NullInjectorError: No provider for ${getTokenName(dependency)}!`);
+      }
+    });
 
-      return new constructor(...resolvedDeps);
-    } else {
-      return new constructor();
-    }
+    return new constructor(...resolvedDeps);
   }
 }
+
+export const ioCContainer = new IoCContainer();

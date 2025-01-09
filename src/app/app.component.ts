@@ -30,9 +30,10 @@ class Parent {
   ) {}
 }
 
-const classToken = new InjectionToken<typeof Parent>('classToken');
-const valueToken = new InjectionToken<number>('valueToken');
-const factoryToken = new InjectionToken<string>('factoryToken');
+const CLASS_TOKEN = new InjectionToken<typeof Parent>('CLASS_TOKEN');
+const VALUE_TOKEN = new InjectionToken<number>('VALUE_TOKEN');
+const FACTORY_TOKEN = new InjectionToken<string>('FACTORY_TOKEN');
+const EXISTING_TOKEN = new InjectionToken<Child3>('EXISTING_TOKEN');
 
 @Component({
   selector: 'app-root',
@@ -52,14 +53,20 @@ export class AppComponent {
     this.injector.provide(Child1);
     this.injector.provide(Child2);
     this.injector.provide(Child3);
-    this.injector.provide({ provide: classToken, useClass: Parent });
-    this.injector.provide({ provide: valueToken, useValue: 20 });
+    this.injector.provide({ provide: CLASS_TOKEN, useClass: Parent });
+    this.injector.provide({ provide: VALUE_TOKEN, useValue: 20 });
     this.injector.provide({
-      provide: factoryToken,
+      provide: FACTORY_TOKEN,
       useFactory: (child3resolver: Child3) => child3resolver.child3,
       deps: [Child3],
     });
+    this.injector.provide({ provide: EXISTING_TOKEN, useExisting: VALUE_TOKEN });
 
-    console.log(this.injector.get(classToken), this.injector.get(valueToken), this.injector.get(factoryToken));
+    console.log(
+      this.injector.get(CLASS_TOKEN),
+      this.injector.get(VALUE_TOKEN),
+      this.injector.get(FACTORY_TOKEN),
+      this.injector.get(EXISTING_TOKEN),
+    );
   }
 }

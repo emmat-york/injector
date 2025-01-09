@@ -5,5 +5,5 @@ export function Service(): ClassDecorator {
 }
 
 export const getTokenName = (token: ProviderToken<unknown>): string => {
-  return typeof token === 'function' ? token.name : token.id;
+  return typeof token === 'function' ? token.name : token.uniqueDesc;
 };

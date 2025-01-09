@@ -1,13 +1,5 @@
 import 'reflect-metadata';
-import {
-  Constructor,
-  ExistingProvider,
-  ExtractProviderTokenType,
-  FactoryProvider,
-  ProviderConfig,
-  ProviderToken,
-  UseClassProviderConfig,
-} from './injector.interface';
+import { Constructor, ExistingProvider, FactoryProvider, ProviderConfig, ProviderToken } from './injector.interface';
 import { getTokenName } from './injector.util';
 
 export class IoCContainer {
@@ -15,17 +7,11 @@ export class IoCContainer {
   private readonly resolvers = new Map<ProviderToken<unknown>, unknown>();
 
   provide(constructor: Constructor): void;
-  provide<T extends ProviderToken<unknown>, V extends Constructor>(config: UseClassProviderConfig<T, V>): void;
-  provide<T extends ProviderToken<unknown>, V extends ExtractProviderTokenType<T>>(config: {
-    provide: T;
-    useValue: V;
-  }): void;
-  provide<T extends ProviderToken<unknown>, V extends ProviderToken<unknown>>(config: {
-    provide: T;
-    useExisting: V;
-  }): void;
-  provide<T extends ProviderToken<unknown>, V extends ExtractProviderTokenType<T>>(config: {
-    provide: T;
+  provide<T extends ProviderToken<unknown>, V extends Constructor>(config: { provide: T; useClass: V }): void;
+  provide<T extends ProviderToken<unknown>, V>(config: { provide: T; useValue: V }): void;
+  provide<T, V>(config: { provide: ProviderToken<T>; useExisting: ProviderToken<V> }): void;
+  provide<T, V>(config: {
+    provide: ProviderToken<T>;
     useFactory: (...args: any[]) => V;
     deps?: ProviderToken<unknown>[];
   }): void;
@@ -72,7 +58,7 @@ export class IoCContainer {
     }
   }
 
-  private resolveUseFactory(config: FactoryProvider<unknown>): void {
+  private resolveUseFactory(config: FactoryProvider): void {
     const depsList = config.deps ?? [];
 
     if (depsList.length) {
@@ -83,7 +69,7 @@ export class IoCContainer {
     }
   }
 
-  private resolveUseExisting(config: ExistingProvider<unknown>): void {
+  private resolveUseExisting(config: ExistingProvider): void {
     const existingProvider = this.resolvers.get(config.useExisting);
 
     if (!existingProvider) {

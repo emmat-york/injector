@@ -60,13 +60,9 @@ export class IoCContainer {
 
   private resolveUseFactory(config: FactoryProvider): void {
     const depsList = config.deps ?? [];
+    const resolvedDeps = depsList.map((token) => this.get(token));
 
-    if (depsList.length) {
-      const resolvedDeps = depsList.map((token) => this.get(token));
-      this.resolvers.set(config.provide, config.useFactory(...resolvedDeps));
-    } else {
-      this.resolvers.set(config.provide, config.useFactory());
-    }
+    this.resolvers.set(config.provide, config.useFactory(...resolvedDeps));
   }
 
   private resolveUseExisting(config: ExistingProvider): void {

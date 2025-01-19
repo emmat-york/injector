@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ioCContainer } from './injector/injector';
-import { Service } from './injector/injector.util';
 import { InjectionToken } from './injector/injector.constant';
+import { Service } from './injector/injector.decorator';
 
 @Service()
 export class Child1 {
@@ -30,7 +30,7 @@ class Parent {
   ) {}
 }
 
-const CLASS_TOKEN = new InjectionToken<typeof Parent>('CLASS_TOKEN');
+const CLASS_TOKEN = new InjectionToken<Parent>('CLASS_TOKEN');
 const VALUE_TOKEN = new InjectionToken<number>('VALUE_TOKEN');
 const FACTORY_TOKEN = new InjectionToken<string>('FACTORY_TOKEN');
 const EXISTING_TOKEN = new InjectionToken<Child3>('EXISTING_TOKEN');
@@ -60,6 +60,7 @@ export class AppComponent {
       useFactory: (child3resolver: Child3) => child3resolver.child3,
       deps: [Child3],
     });
+
     this.injector.provide({ provide: EXISTING_TOKEN, useExisting: VALUE_TOKEN });
 
     console.log(

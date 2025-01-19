@@ -3,7 +3,19 @@ import { Constructor, ExistingProvider, FactoryProvider, ProviderConfig, Provide
 import { getTokenName } from './injector.util';
 
 export class IoCContainer {
+  /**
+   * @description A storage for provider configurations.
+   * Each entry associates a token (provider identifier)
+   * with a configuration that describes how to create
+   * or supply a value for this token.
+   **/
   private readonly providers = new Map<ProviderToken<unknown>, ProviderConfig>();
+
+  /**
+   * @description A cache for already resolved dependencies.
+   * Once a dependency is resolved for a specific token,
+   * its value is stored here to avoid repeating the creation process.
+   **/
   private readonly resolvers = new Map<ProviderToken<unknown>, unknown>();
 
   provide(constructor: Constructor): void;
@@ -26,6 +38,13 @@ export class IoCContainer {
     this.providers.set(providerToken, config);
   }
 
+  /**
+   * @description A method to retrieve a resolved dependency by its token.
+   * If the dependency is already resolved, it returns the cached value from resolvers.
+   * Otherwise, it initiates the resolution process.
+   * @param token The token representing the required dependency.
+   * @return The resolved dependency.
+   **/
   get(token: ProviderToken<unknown>): any {
     const resolver = this.resolvers.get(token);
 
@@ -38,6 +57,12 @@ export class IoCContainer {
     return this.resolvers.get(token);
   }
 
+  /**
+   * @description: A method for resolving a dependency by its token.
+   * Determines how to create a value for the token based on its configuration.
+   * @param token The token representing the dependency.
+   * @exception NullInjectorError if no provider is found for the token.
+   **/
   private resolve(token: ProviderToken<unknown>): void {
     const providerConfig = this.providers.get(token);
 

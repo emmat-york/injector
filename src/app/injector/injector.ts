@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { Constructor, ExistingProvider, FactoryProvider, ProviderConfig, ProviderToken } from './injector.interface';
 import { getTokenName } from './injector.util';
 
-export class IoCContainer {
+export class Injector {
   /**
    * @description A storage for provider configurations.
    * Each entry associates a token (provider identifier)
@@ -100,6 +100,14 @@ export class IoCContainer {
     this.resolvers.set(config.provide, existingProvider);
   }
 
+  /**
+   * @description Creates an instance of a dependency by resolving its constructor dependencies.
+   * Uses `Reflect.getMetadata` to retrieve the list of dependencies defined in the constructor
+   * and recursively resolves each dependency.
+   * @param constructor The class constructor representing the dependency to be instantiated.
+   * @return An instance of the provided constructor with all its dependencies resolved.
+   * @exception NullInjectorError if no provider is found for the token.
+   **/
   private createClassInstance(constructor: Constructor): object {
     const depsList: Constructor[] = Reflect.getMetadata('design:paramtypes', constructor) ?? [];
 
@@ -117,4 +125,4 @@ export class IoCContainer {
   }
 }
 
-export const ioCContainer = new IoCContainer();
+export const injector = new Injector();

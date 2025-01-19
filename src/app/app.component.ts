@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { ioCContainer } from './injector/injector';
+import { injector } from './injector/injector';
 import { InjectionToken } from './injector/injector.constant';
 import { Service } from './injector/injector.decorator';
 
@@ -43,7 +43,7 @@ const EXISTING_TOKEN = new InjectionToken<Child3>('EXISTING_TOKEN');
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent {
-  readonly injector = ioCContainer;
+  readonly injector = injector;
 
   constructor() {
     this.init();
@@ -64,10 +64,10 @@ export class AppComponent {
     this.injector.provide({ provide: EXISTING_TOKEN, useExisting: VALUE_TOKEN });
 
     console.log(
-      this.injector.get(CLASS_TOKEN),
-      this.injector.get(VALUE_TOKEN),
-      this.injector.get(FACTORY_TOKEN),
-      this.injector.get(EXISTING_TOKEN),
+      this.injector.get(CLASS_TOKEN), // instance of Parent class
+      this.injector.get(VALUE_TOKEN), // 20
+      this.injector.get(FACTORY_TOKEN), // 'Child-3'
+      this.injector.get(EXISTING_TOKEN), // 20
     );
   }
 }

@@ -30,16 +30,6 @@ export class Injector {
     this.parent = config?.parent;
   }
 
-  provide(constructor: Constructor): void;
-  provide<T extends ProviderToken<unknown>, V extends Constructor>(config: { provide: T; useClass: V }): void;
-  provide<T extends ProviderToken<unknown>, V>(config: { provide: T; useValue: V }): void;
-  provide<T, V>(config: { provide: ProviderToken<T>; useExisting: ProviderToken<V> }): void;
-  provide<T, V>(config: {
-    provide: ProviderToken<T>;
-    useFactory: (...args: any[]) => V;
-    deps?: ProviderToken<unknown>[];
-  }): void;
-
   provide(config: ProviderConfig): void {
     const providerToken = typeof config === 'function' ? config : config.provide;
 

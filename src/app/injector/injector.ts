@@ -1,5 +1,12 @@
 import 'reflect-metadata';
-import { Constructor, ExistingProvider, FactoryProvider, ProviderConfig, ProviderToken } from './injector.interface';
+import {
+  Constructor,
+  ExistingProvider,
+  FactoryProvider,
+  InjectorConfig,
+  ProviderConfig,
+  ProviderToken,
+} from './injector.interface';
 import { getTokenName } from './injector.util';
 
 export class Injector {
@@ -17,6 +24,11 @@ export class Injector {
    * its value is stored here to avoid repeating the creation process.
    **/
   private readonly resolvers = new Map<ProviderToken<unknown>, unknown>();
+  private readonly parent?: Injector;
+
+  constructor(config?: InjectorConfig) {
+    this.parent = config?.parent;
+  }
 
   provide(constructor: Constructor): void;
   provide<T extends ProviderToken<unknown>, V extends Constructor>(config: { provide: T; useClass: V }): void;
@@ -45,8 +57,13 @@ export class Injector {
    * @param token The token representing the required dependency.
    * @return The resolved dependency.
    **/
-  get(token: ProviderToken<unknown>): any {
+  get(token: ProviderToken<unknown>): unknown {
+    const provider = this.providers.get(token);
     const resolver = this.resolvers.get(token);
+
+    if (!provider && this.parent) {
+      return this.parent.get(token);
+    }
 
     if (resolver) {
       return resolver;
@@ -86,7 +103,6 @@ export class Injector {
   private resolveUseFactory(config: FactoryProvider): void {
     const depsList = config.deps ?? [];
     const resolvedDeps = depsList.map((token) => this.get(token));
-
     this.resolvers.set(config.provide, config.useFactory(...resolvedDeps));
   }
 

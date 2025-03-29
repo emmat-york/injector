@@ -1,13 +1,6 @@
 import 'reflect-metadata';
-import {
-  Constructor,
-  ExistingProvider,
-  FactoryProvider,
-  InjectorConfig,
-  ProviderConfig,
-  ProviderToken,
-} from './injector.interface';
-import { getTokenName } from './injector.util';
+import { Constructor, FactoryProvider, InjectorConfig, ProviderConfig, ProviderToken } from './injector.interface';
+import { getTokenName, isSingleProvider } from './injector.util';
 
 export class Injector {
   /**
@@ -16,7 +9,7 @@ export class Injector {
    * with a configuration that describes how to create
    * or supply a value for this token.
    **/
-  private readonly providers = new Map<ProviderToken<unknown>, ProviderConfig>();
+  private readonly providers = new Map<ProviderToken<unknown>, ProviderConfig | ProviderConfig[]>();
 
   /**
    * @description A cache for already resolved dependencies.
@@ -33,11 +26,39 @@ export class Injector {
   provide(config: ProviderConfig): void {
     const providerToken = typeof config === 'function' ? config : config.provide;
 
+    if (isSingleProvider(config)) {
+      // If it's regular, non-multi, provider:
+      //
+      // 1. If config is a class (constructor), or
+      // 2. config does not have a "multi" field, or it is false.
+      //
+      // In this case, we simply overwrite the previous provider, if there was one.
+      this.providers.set(providerToken, config);
+    } else {
+      // Multi-provider:
+      // 1. config has "multi: true"
+      // 2. Need to be combined with other multi-providers by the same token
+
+      const existing = this.providers.get(providerToken);
+
+      if (Array.isArray(existing)) {
+        // If there is already an array of providers, just add a new one
+        existing.push(config);
+      } else if (existing) {
+        // If there is already one regular provider (not an array),
+        // turn it into an array + add a new one
+        this.providers.set(providerToken, [existing, config]);
+      } else {
+        // There is no provider yet - create an array of one element
+        this.providers.set(providerToken, [config]);
+      }
+    }
+
+    // Clear the resolvers cache for this token so that the next get()
+    // dependency is recreated with the new data
     if (this.resolvers.has(providerToken)) {
       this.resolvers.delete(providerToken);
     }
-
-    this.providers.set(providerToken, config);
   }
 
   /**
@@ -77,33 +98,35 @@ export class Injector {
       throw new Error(`NullInjectorError: No provider for ${getTokenName(token)}`);
     }
 
-    if (typeof providerConfig === 'function') {
-      this.resolvers.set(token, this.createClassInstance(providerConfig));
-    } else if ('useClass' in providerConfig) {
-      this.resolvers.set(token, this.createClassInstance(providerConfig.useClass));
-    } else if ('useValue' in providerConfig) {
-      this.resolvers.set(token, providerConfig.useValue);
-    } else if ('useFactory' in providerConfig) {
-      this.resolveUseFactory(providerConfig);
+    if (Array.isArray(providerConfig)) {
+      // Multi-provider — collecting all values
+      const resolved = providerConfig.map((config) => this.getResolvedSingleProvider(config));
+      this.resolvers.set(token, resolved);
     } else {
-      this.resolveUseExisting(providerConfig);
+      // Single-provider
+      this.resolvers.set(token, this.getResolvedSingleProvider(providerConfig));
     }
   }
 
-  private resolveUseFactory(config: FactoryProvider): void {
+  private getResolvedSingleProvider(providerConfig: ProviderConfig): any {
+    if (typeof providerConfig === 'function') {
+      return this.createClassInstance(providerConfig);
+    } else if ('useClass' in providerConfig) {
+      return this.createClassInstance(providerConfig.useClass);
+    } else if ('useValue' in providerConfig) {
+      return providerConfig.useValue;
+    } else if ('useFactory' in providerConfig) {
+      return this.resolveUseFactory(providerConfig);
+    } else {
+      return this.get(providerConfig.useExisting);
+    }
+  }
+
+  private resolveUseFactory(config: FactoryProvider): any {
     const depsList = config.deps ?? [];
     const resolvedDeps = depsList.map((token) => this.get(token));
-    this.resolvers.set(config.provide, config.useFactory(...resolvedDeps));
-  }
 
-  private resolveUseExisting(config: ExistingProvider): void {
-    const existingProvider = this.resolvers.get(config.useExisting);
-
-    if (!existingProvider) {
-      throw new Error(`NullInjectorError: No provider for ${getTokenName(config.useExisting)}!`);
-    }
-
-    this.resolvers.set(config.provide, existingProvider);
+    return config.useFactory(...resolvedDeps);
   }
 
   /**
@@ -114,18 +137,9 @@ export class Injector {
    * @return An instance of the provided constructor with all its dependencies resolved.
    * @exception NullInjectorError if no provider is found for the token.
    **/
-  private createClassInstance(constructor: Constructor): object {
+  private createClassInstance<T>(constructor: Constructor<T>): T {
     const depsList: Constructor[] = Reflect.getMetadata('design:paramtypes', constructor) ?? [];
-
-    const resolvedDeps = depsList.map((dependency) => {
-      const provider = this.providers.get(dependency);
-
-      if (provider) {
-        return this.createClassInstance(provider as Constructor);
-      } else {
-        throw new Error(`NullInjectorError: No provider for ${getTokenName(dependency)}!`);
-      }
-    });
+    const resolvedDeps = depsList.map((dependency) => this.get(dependency));
 
     return new constructor(...resolvedDeps);
   }

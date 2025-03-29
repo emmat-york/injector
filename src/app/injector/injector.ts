@@ -28,7 +28,6 @@ export class Injector {
 
     if (isSingleProvider(config)) {
       // If it's regular, non-multi, provider:
-      //
       // 1. If config is a class (constructor), or
       // 2. config does not have a "multi" field, or it is false.
       //
@@ -54,8 +53,7 @@ export class Injector {
       }
     }
 
-    // Clear the resolvers cache for this token so that the next get()
-    // dependency is recreated with the new data
+    // Clear the resolvers cache for this token so that the next get() dependency is recreated with the new data
     if (this.resolvers.has(providerToken)) {
       this.resolvers.delete(providerToken);
     }
@@ -99,11 +97,9 @@ export class Injector {
     }
 
     if (Array.isArray(providerConfig)) {
-      // Multi-provider — collecting all values
       const resolved = providerConfig.map((config) => this.getResolvedSingleProvider(config));
       this.resolvers.set(token, resolved);
     } else {
-      // Single-provider
       this.resolvers.set(token, this.getResolvedSingleProvider(providerConfig));
     }
   }

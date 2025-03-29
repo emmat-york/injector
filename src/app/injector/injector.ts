@@ -23,7 +23,19 @@ export class Injector {
     this.parent = config?.parent;
   }
 
-  provide(config: ProviderConfig): void {
+  static create(config?: { providers?: ProviderConfig[]; parent?: Injector }): Injector {
+    const injector = new Injector({ parent: config?.parent });
+
+    if (config?.providers && config.providers.length) {
+      for (const provider of config.providers) {
+        injector.provide(provider);
+      }
+    }
+
+    return injector;
+  }
+
+  private provide(config: ProviderConfig): void {
     const providerToken = typeof config === 'function' ? config : config.provide;
 
     if (isSingleProvider(config)) {
@@ -140,5 +152,3 @@ export class Injector {
     return new constructor(...resolvedDeps);
   }
 }
-
-export const injector = new Injector();

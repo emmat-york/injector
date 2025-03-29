@@ -1,5 +1,4 @@
-import 'reflect-metadata';
-import { Constructor, FactoryProvider, InjectorConfig, ProviderConfig, ProviderToken } from './injector.interface';
+import { Constructor, InjectorConfig, ProviderConfig, ProviderToken } from './injector.interface';
 import { getTokenName, isSingleProvider } from './injector.util';
 
 export class Injector {
@@ -78,7 +77,7 @@ export class Injector {
    * @param token The token representing the required dependency.
    * @return The resolved dependency.
    **/
-  get(token: ProviderToken<unknown>): unknown {
+  get(token: ProviderToken<unknown>): any {
     const provider = this.providers.get(token);
     const resolver = this.resolvers.get(token);
 
@@ -124,17 +123,13 @@ export class Injector {
     } else if ('useValue' in providerConfig) {
       return providerConfig.useValue;
     } else if ('useFactory' in providerConfig) {
-      return this.resolveUseFactory(providerConfig);
+      const depsList = providerConfig.deps ?? [];
+      const resolvedDeps = depsList.map((token) => this.get(token));
+
+      return providerConfig.useFactory(...resolvedDeps);
     } else {
       return this.get(providerConfig.useExisting);
     }
-  }
-
-  private resolveUseFactory(config: FactoryProvider): any {
-    const depsList = config.deps ?? [];
-    const resolvedDeps = depsList.map((token) => this.get(token));
-
-    return config.useFactory(...resolvedDeps);
   }
 
   /**

@@ -34,42 +34,6 @@ export class Injector {
     return injector;
   }
 
-  private provide(config: ProviderConfig): void {
-    const providerToken = typeof config === 'function' ? config : config.provide;
-
-    if (isSingleProvider(config)) {
-      // If it's regular, non-multi, provider:
-      // 1. If config is a class (constructor), or
-      // 2. config does not have a "multi" field, or it is false.
-      //
-      // In this case, we simply overwrite the previous provider, if there was one.
-      this.providers.set(providerToken, config);
-    } else {
-      // Multi-provider:
-      // 1. config has "multi: true"
-      // 2. Need to be combined with other multi-providers by the same token
-
-      const existing = this.providers.get(providerToken);
-
-      if (Array.isArray(existing)) {
-        // If there is already an array of providers, just add a new one
-        existing.push(config);
-      } else if (existing) {
-        // If there is already one regular provider (not an array),
-        // turn it into an array + add a new one
-        this.providers.set(providerToken, [existing, config]);
-      } else {
-        // There is no provider yet - create an array of one element
-        this.providers.set(providerToken, [config]);
-      }
-    }
-
-    // Clear the resolvers cache for this token so that the next get() dependency is recreated with the new data
-    if (this.resolvers.has(providerToken)) {
-      this.resolvers.delete(providerToken);
-    }
-  }
-
   /**
    * @description A method to retrieve a resolved dependency by its token.
    * If the dependency is already resolved, it returns the cached value from resolvers.
@@ -94,8 +58,44 @@ export class Injector {
     return this.resolvers.get(token);
   }
 
+  private provide(config: ProviderConfig): void {
+    const providerToken = typeof config === 'function' ? config : config.provide;
+
+    if (isSingleProvider(config)) {
+      // If it's regular, non-multi, provider:
+      // 1. If config is a class (constructor), or
+      // 2. config does not have a "multi" field, or it is false.
+      //
+      // In this case, we simply overwrite the previous provider, if there was one.
+      this.providers.set(providerToken, config);
+    } else {
+      // Multi-provider:
+      // 1. config has "multi: true";
+      // 2. Need to be combined with other multi-providers by the same token.
+
+      const existing = this.providers.get(providerToken);
+
+      if (Array.isArray(existing)) {
+        // If there is already an array of providers, just add a new one
+        existing.push(config);
+      } else if (existing) {
+        // If there is already one regular provider (not an array),
+        // turn it into an array + add a new one
+        this.providers.set(providerToken, [existing, config]);
+      } else {
+        // There is no provider yet - create an array of one element
+        this.providers.set(providerToken, [config]);
+      }
+    }
+
+    // Clear the resolvers cache for this token so that the next get() dependency is recreated with the new data
+    if (this.resolvers.has(providerToken)) {
+      this.resolvers.delete(providerToken);
+    }
+  }
+
   /**
-   * @description: A method for resolving a dependency by its token.
+   * @description A method for resolving a dependency by its token.
    * Determines how to create a value for the token based on its configuration.
    * @param token The token representing the dependency.
    * @exception NullInjectorError if no provider is found for the token.
@@ -138,7 +138,6 @@ export class Injector {
    * and recursively resolves each dependency.
    * @param constructor The class constructor representing the dependency to be instantiated.
    * @return An instance of the provided constructor with all its dependencies resolved.
-   * @exception NullInjectorError if no provider is found for the token.
    **/
   private createClassInstance<T>(constructor: Constructor<T>): T {
     const depsList: Constructor[] = Reflect.getMetadata('design:paramtypes', constructor) ?? [];

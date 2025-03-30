@@ -1,10 +1,11 @@
 import { InjectionToken } from './injector.constant';
 import { Injector } from './injector';
 
-export type Constructor<T = any> = new (...args: any[]) => T;
+export type Constructor = { new (...args: any[]): object };
 
 export interface InjectorConfig {
   parent?: Injector;
+  name?: string;
 }
 
 export type ProviderToken<T> = Constructor | InjectionToken<T>;

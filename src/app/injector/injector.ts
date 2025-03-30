@@ -16,14 +16,19 @@ export class Injector {
    * its value is stored here to avoid repeating the creation process.
    **/
   private readonly resolvers = new Map<ProviderToken<unknown>, unknown>();
+
+  // Parent injector
   private readonly parent?: Injector;
+  // Name of the Injector
+  private readonly name?: string;
 
   constructor(config?: InjectorConfig) {
     this.parent = config?.parent;
+    this.name = config?.name;
   }
 
-  static create(config?: { providers?: ProviderConfig[]; parent?: Injector }): Injector {
-    const injector = new Injector({ parent: config?.parent });
+  static create(config?: { providers?: ProviderConfig[]; parent?: Injector; name?: string }): Injector {
+    const injector = new Injector({ parent: config?.parent, name: config?.name });
 
     if (config?.providers && config.providers.length) {
       for (const provider of config.providers) {
@@ -104,7 +109,9 @@ export class Injector {
     const providerConfig = this.providers.get(token);
 
     if (!providerConfig) {
-      throw new Error(`NullInjectorError: No provider for ${getTokenName(token)}`);
+      throw new Error(
+        `NullInjectorError: No provider for ${getTokenName(token)}. ` + this.name ? `Injector: ${this.name}` : '',
+      );
     }
 
     if (Array.isArray(providerConfig)) {
@@ -139,7 +146,7 @@ export class Injector {
    * @param constructor The class constructor representing the dependency to be instantiated.
    * @return An instance of the provided constructor with all its dependencies resolved.
    **/
-  private createClassInstance<T>(constructor: Constructor<T>): T {
+  private createClassInstance(constructor: Constructor): object {
     const depsList: Constructor[] = Reflect.getMetadata('design:paramtypes', constructor) ?? [];
     const resolvedDeps = depsList.map((dependency) => this.get(dependency));
 

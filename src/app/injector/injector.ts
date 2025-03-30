@@ -66,19 +66,18 @@ export class Injector {
       const existing = this.providers.get(providerToken);
 
       if (Array.isArray(existing)) {
-        // If there is already an array of providers, just add a new one
+        // If there is already an array of providers, just add a new one.
         existing.push(config);
       } else if (existing) {
-        // If there is already one regular provider (not an array),
-        // turn it into an array + add a new one
+        // If there is already one regular provider (not an array), turn it into an array + add a new one.
         this.providers.set(providerToken, [existing, config]);
       } else {
-        // There is no provider yet - create an array of one element
+        // There is no provider yet - create an array of one element.
         this.providers.set(providerToken, [config]);
       }
     }
 
-    // Clear the resolvers cache for this token so that the next get() dependency is recreated with the new data
+    // Clear the resolvers cache for this token so that the next get() dependency is recreated with the new data.
     if (this.resolvers.has(providerToken)) {
       this.resolvers.delete(providerToken);
     }

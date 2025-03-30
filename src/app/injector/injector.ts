@@ -2,19 +2,12 @@ import { Constructor, InjectorConfig, ProviderConfig, ProviderToken } from './in
 import { getTokenName, isSingleProvider } from './injector.util';
 
 export class Injector {
-  /**
-   * @description A storage for provider configurations.
-   * Each entry associates a token (provider identifier)
-   * with a configuration that describes how to create
-   * or supply a value for this token.
-   **/
+  // A storage for provider configurations. Each entry associates a token (provider identifier)
+  // with a configuration that describes how to create or supply a value for this token.
   private readonly providers = new Map<ProviderToken<unknown>, ProviderConfig | ProviderConfig[]>();
 
-  /**
-   * @description A cache for already resolved dependencies.
-   * Once a dependency is resolved for a specific token,
-   * its value is stored here to avoid repeating the creation process.
-   **/
+  // A cache for already resolved dependencies. Once a dependency is resolved for a specific token,
+  // its value is stored here to avoid repeating the creation process.
   private readonly resolvers = new Map<ProviderToken<unknown>, unknown>();
 
   // Parent injector
@@ -40,9 +33,8 @@ export class Injector {
   }
 
   /**
-   * @description A method to retrieve a resolved dependency by its token.
-   * If the dependency is already resolved, it returns the cached value from resolvers.
-   * Otherwise, it initiates the resolution process.
+   * @description A method to retrieve a resolved dependency by its token. If the dependency is already resolved,
+   * it returns the cached value from resolvers. Otherwise, it initiates the resolution process.
    * @param token The token representing the required dependency.
    * @return The resolved dependency.
    **/
@@ -67,17 +59,12 @@ export class Injector {
     const providerToken = typeof config === 'function' ? config : config.provide;
 
     if (isSingleProvider(config)) {
-      // If it's regular, non-multi, provider:
-      // 1. If config is a class (constructor), or
-      // 2. config does not have a "multi" field, or it is false.
-      //
-      // In this case, we simply overwrite the previous provider, if there was one.
+      // If config is a class, or config does not have a "multi" field, or it is false.
       this.providers.set(providerToken, config);
     } else {
       // Multi-provider:
       // 1. config has "multi: true";
       // 2. Need to be combined with other multi-providers by the same token.
-
       const existing = this.providers.get(providerToken);
 
       if (Array.isArray(existing)) {

@@ -1,19 +1,22 @@
-import { Constructor, InjectorConfig, ProviderConfig, ProviderToken } from './injector.interface';
+import { Constructor, ProviderConfig, ProviderToken } from './injector.interface';
 import { getTokenName, isSingleProvider } from './injector.util';
 
 export class Injector {
-  // A storage for provider configurations. Each entry associates a token (provider identifier)
-  // with a configuration that describes how to create or supply a value for this token.
-  private readonly providers = new Map<ProviderToken<unknown>, ProviderConfig | ProviderConfig[]>();
+  // A storage for provider configurations. Each entry associates a token with a
+  // configuration that describes how to create or supply a value for this token.
+  private readonly registeredProviders = new Map<ProviderToken<unknown>, ProviderConfig | ProviderConfig[]>();
 
   // A cache for already resolved dependencies. Once a dependency is resolved for a specific token,
   // its value is stored here to avoid repeating the creation process.
   private readonly resolvers = new Map<ProviderToken<unknown>, unknown>();
 
+  // Parent injector.
   private readonly parent?: Injector;
+
+  // Unique injector name.
   private readonly name?: string;
 
-  constructor(config?: InjectorConfig) {
+  constructor(config?: { parent?: Injector; name?: string }) {
     this.parent = config?.parent;
     this.name = config?.name;
   }
@@ -22,25 +25,21 @@ export class Injector {
     const injector = new Injector({ parent: config?.parent, name: config?.name });
 
     if (config?.providers && config.providers.length) {
-      for (const provider of config.providers) {
-        injector.provide(provider);
+      for (const providerConfig of config.providers) {
+        injector.provide(providerConfig);
       }
     }
 
     return injector;
   }
 
-  /**
-   * @description A method to retrieve a resolved dependency by its token. If the dependency is already resolved,
-   * it returns the cached value from resolvers. Otherwise, it initiates the resolution process.
-   * @param token The token representing the required dependency.
-   * @return The resolved dependency.
-   **/
+  // A method to retrieve a resolved dependency by its token. If the dependency is already resolved,
+  // it returns the cached value from resolvers. Otherwise, it initiates the resolution process.
   get(token: ProviderToken<unknown>): any {
-    const provider = this.providers.get(token);
+    const providerConfig = this.registeredProviders.get(token);
     const resolver = this.resolvers.get(token);
 
-    if (!provider && this.parent) {
+    if (!providerConfig && this.parent) {
       return this.parent.get(token);
     }
 
@@ -53,27 +52,30 @@ export class Injector {
     return this.resolvers.get(token);
   }
 
-  private provide(config: ProviderConfig): void {
-    const providerToken = typeof config === 'function' ? config : config.provide;
+  private provide(providerConfig: ProviderConfig): void {
+    const providerToken = typeof providerConfig === 'function' ? providerConfig : providerConfig.provide;
 
-    if (isSingleProvider(config)) {
-      // If config is a class, or config does not have a "multi" field, or it is false.
-      this.providers.set(providerToken, config);
+    if (isSingleProvider(providerConfig)) {
+      // If config is:
+      // 1. a class (constructor);
+      // 2. config does not have a "multi" field;
+      // 3. "multi" field is false.
+      this.registeredProviders.set(providerToken, providerConfig);
     } else {
       // Multi-provider:
       // 1. config has "multi: true";
       // 2. Need to be combined with other multi-providers by the same token.
-      const existing = this.providers.get(providerToken);
+      const existingProviderConfig = this.registeredProviders.get(providerToken);
 
-      if (Array.isArray(existing)) {
+      if (Array.isArray(existingProviderConfig)) {
         // If there is already an array of providers, just add a new one.
-        existing.push(config);
-      } else if (existing) {
+        existingProviderConfig.push(providerConfig);
+      } else if (existingProviderConfig) {
         // If there is already one regular provider (not an array), turn it into an array + add a new one.
-        this.providers.set(providerToken, [existing, config]);
+        this.registeredProviders.set(providerToken, [existingProviderConfig, providerConfig]);
       } else {
         // There is no provider yet - create an array of one element.
-        this.providers.set(providerToken, [config]);
+        this.registeredProviders.set(providerToken, [providerConfig]);
       }
     }
 
@@ -83,14 +85,9 @@ export class Injector {
     }
   }
 
-  /**
-   * @description A method for resolving a dependency by its token.
-   * Determines how to create a value for the token based on its configuration.
-   * @param token The token representing the dependency.
-   * @exception NullInjectorError if no provider is found for the token.
-   **/
+  // Method for resolving a dependency by its token. Determines how to create a value for the token based on its configuration.
   private resolve(token: ProviderToken<unknown>): void {
-    const providerConfig = this.providers.get(token);
+    const providerConfig = this.registeredProviders.get(token);
 
     if (!providerConfig) {
       throw new Error(
@@ -123,13 +120,9 @@ export class Injector {
     }
   }
 
-  /**
-   * @description Creates an instance of a dependency by resolving its constructor dependencies.
-   * Uses `Reflect.getMetadata` to retrieve the list of dependencies defined in the constructor
-   * and recursively resolves each dependency.
-   * @param constructor The class constructor representing the dependency to be instantiated.
-   * @return An instance of the provided constructor with all its dependencies resolved.
-   **/
+  // Creates an instance of a dependency by resolving its constructor dependencies.
+  // Uses `Reflect.getMetadata` to retrieve the list of dependencies defined in the constructor
+  // and recursively resolves each dependency.
   private createClassInstance(constructor: Constructor): object {
     const depsList: Constructor[] = Reflect.getMetadata('design:paramtypes', constructor) ?? [];
     const resolvedDeps = depsList.map((dependency) => this.get(dependency));

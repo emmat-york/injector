@@ -10,10 +10,8 @@ export class Injector {
   // its value is stored here to avoid repeating the creation process.
   private readonly resolvers = new Map<ProviderToken<unknown>, unknown>();
 
-  // Parent injector.
   private readonly parent?: Injector;
-
-  // Unique injector name.
+  // Injector's name is used for debugging and diagnostics showing in which injector the error occurred.
   private readonly name?: string;
 
   constructor(config?: { parent?: Injector; name?: string }) {

@@ -53,35 +53,35 @@ export class Injector {
   }
 
   private provide(providerConfig: ProviderConfig): void {
-    const providerToken = typeof providerConfig === 'function' ? providerConfig : providerConfig.provide;
+    const token = typeof providerConfig === 'function' ? providerConfig : providerConfig.provide;
 
     if (isSingleProvider(providerConfig)) {
       // If config is:
       // 1. a class (constructor);
       // 2. config does not have a "multi" field;
       // 3. "multi" field is false.
-      this.registeredProviders.set(providerToken, providerConfig);
+      this.registeredProviders.set(token, providerConfig);
     } else {
       // Multi-provider:
       // 1. config has "multi: true";
       // 2. Need to be combined with other multi-providers by the same token.
-      const existingProviderConfig = this.registeredProviders.get(providerToken);
+      const existingProviderConfig = this.registeredProviders.get(token);
 
       if (Array.isArray(existingProviderConfig)) {
         // If there is already an array of providers, just add a new one.
         existingProviderConfig.push(providerConfig);
       } else if (existingProviderConfig) {
         // If there is already one regular provider (not an array), turn it into an array + add a new one.
-        this.registeredProviders.set(providerToken, [existingProviderConfig, providerConfig]);
+        this.registeredProviders.set(token, [existingProviderConfig, providerConfig]);
       } else {
         // There is no provider yet - create an array of one element.
-        this.registeredProviders.set(providerToken, [providerConfig]);
+        this.registeredProviders.set(token, [providerConfig]);
       }
     }
 
     // Clear the resolvers cache for this token so that the next get() dependency is recreated with the new data.
-    if (this.resolvers.has(providerToken)) {
-      this.resolvers.delete(providerToken);
+    if (this.resolvers.has(token)) {
+      this.resolvers.delete(token);
     }
   }
 

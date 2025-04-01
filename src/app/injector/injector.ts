@@ -33,7 +33,7 @@ export class Injector {
     return injector;
   }
 
-  // A method to retrieve a resolved dependency by its token. If the dependency is already resolved,
+  // Method to retrieve a resolved dependency by its token. If the dependency is already resolved,
   // it returns the cached value from resolvers. Otherwise, it initiates the resolution process.
   get(token: ProviderToken<unknown>): any {
     const providerConfig = this.registeredProviders.get(token);

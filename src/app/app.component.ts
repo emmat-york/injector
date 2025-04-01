@@ -55,14 +55,19 @@ export class AppComponent {
         Child3,
         { provide: CLASS_TOKEN, useClass: Parent },
         { provide: VALUE_TOKEN, useValue: 20 },
-        {
-          provide: FACTORY_TOKEN,
-          useFactory: (child3resolver: Child3) => child3resolver.child3,
-          deps: [Child3],
-        },
         { provide: EXISTING_TOKEN, useExisting: VALUE_TOKEN },
       ],
-      parent: Injector.create(),
+      parent: Injector.create({
+        providers: [
+          Child3,
+          {
+            provide: FACTORY_TOKEN,
+            useFactory: (child3resolver: Child3) => child3resolver.child3,
+            deps: [Child3],
+          },
+        ],
+      }),
+      name: 'appComponentInjector',
     });
 
     console.log(

@@ -1,4 +1,4 @@
-import { Constructor, ProviderConfig, ProviderToken } from './injector.interface';
+import { Constructor, ExtractOutputValue, ProviderConfig, ProviderToken } from './injector.interface';
 import { getTokenName, isSingleProvider } from './injector.util';
 
 export class Injector {
@@ -35,7 +35,7 @@ export class Injector {
 
   // Method to retrieve a resolved dependency by its token. If the dependency is already resolved,
   // it returns the cached value from resolvers. Otherwise, it initiates the resolution process.
-  get(token: ProviderToken<unknown>): any {
+  get<T extends ProviderToken<unknown>, Output extends ExtractOutputValue<T>>(token: T): Output {
     const providerConfig = this.registeredProviders.get(token);
     const resolver = this.resolvers.get(token);
 
@@ -44,12 +44,12 @@ export class Injector {
     }
 
     if (resolver) {
-      return resolver;
+      return resolver as Output;
     } else {
       this.resolve(token);
     }
 
-    return this.resolvers.get(token);
+    return this.resolvers.get(token) as Output;
   }
 
   private provide(providerConfig: ProviderConfig): void {
@@ -123,10 +123,10 @@ export class Injector {
   // Creates an instance of a dependency by resolving its constructor dependencies.
   // Uses `Reflect.getMetadata` to retrieve the list of dependencies defined in the constructor
   // and recursively resolves each dependency.
-  private createClassInstance(constructor: Constructor): object {
+  private createClassInstance<T extends Constructor, Instance extends InstanceType<T>>(constructor: T): Instance {
     const depsList: Constructor[] = Reflect.getMetadata('design:paramtypes', constructor) ?? [];
     const resolvedDeps = depsList.map((dependency) => this.get(dependency));
 
-    return new constructor(...resolvedDeps);
+    return new constructor(...resolvedDeps) as Instance;
   }
 }

@@ -21,3 +21,9 @@ export type FactoryProvider = {
 };
 
 export type ProviderConfig = Constructor | ClassProvider | ValueProvider | FactoryProvider | ExistingProvider;
+
+export type ExtractOutputValue<T extends ProviderToken<unknown>> = T extends Constructor
+  ? InstanceType<T>
+  : T extends InjectionToken<infer U>
+    ? U
+    : unknown;

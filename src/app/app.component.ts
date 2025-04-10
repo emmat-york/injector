@@ -17,7 +17,7 @@ class Child3 {
 class Child2 {
   readonly child2 = 'Child-2';
 
-  constructor(private dep3: Child3) {}
+  constructor(public readonly dep3: Child3) {}
 }
 
 @Service()
@@ -25,8 +25,8 @@ class Parent {
   readonly parent = 'Parent';
 
   constructor(
-    private dep1: Child1,
-    private dep2: Child2,
+    public readonly dep1: Child1,
+    public readonly dep2: Child2,
   ) {}
 }
 
@@ -75,6 +75,7 @@ export class AppComponent {
       injector.get(VALUE_TOKEN), // 20
       injector.get(FACTORY_TOKEN), // 'Child-3'
       injector.get(EXISTING_TOKEN), // 20
+      injector.get(Child3),
     );
   }
 }

@@ -2,18 +2,10 @@ import { Constructor, ExtractOutputValue, ProviderConfig, ProviderToken } from '
 import { getTokenName, isSingleProvider } from './injector.util';
 
 export class Injector {
-  // A storage for provider configurations. Each entry associates a token with a
-  // configuration that describes how to create or supply a value for this token.
   private readonly registeredProviders = new Map<ProviderToken<unknown>, ProviderConfig | ProviderConfig[]>();
-
-  // A cache for already resolved dependencies. Once a dependency is resolved for a specific token,
-  // its value is stored here to avoid repeating the creation process.
   private readonly resolvers = new Map<ProviderToken<unknown>, unknown>();
 
-  // Parent injector.
   private readonly parent?: Injector;
-
-  // Unique injector name is used for debugging and diagnostics showing in which injector the error occurred.
   private readonly name?: string;
 
   constructor(config?: { parent?: Injector; name?: string }) {

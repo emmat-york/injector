@@ -54,7 +54,8 @@ export class AppComponent {
         Child2,
         Child3,
         { provide: CLASS_TOKEN, useClass: Parent },
-        { provide: VALUE_TOKEN, useValue: 20 },
+        { provide: VALUE_TOKEN, useValue: 10, multi: true },
+        { provide: VALUE_TOKEN, useValue: 20, multi: true },
         { provide: EXISTING_TOKEN, useExisting: VALUE_TOKEN },
       ],
       parent: Injector.create({
@@ -71,11 +72,11 @@ export class AppComponent {
     });
 
     console.log(
+      injector.get(Child2), // instance of Child2 class
       injector.get(CLASS_TOKEN), // instance of Parent class
-      injector.get(VALUE_TOKEN), // 20
+      injector.get(VALUE_TOKEN), // [10, 20]
       injector.get(FACTORY_TOKEN), // 'Child-3'
-      injector.get(EXISTING_TOKEN), // 20
-      injector.get(Child3),
+      injector.get(EXISTING_TOKEN), // [10, 20]
     );
   }
 }

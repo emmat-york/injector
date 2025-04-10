@@ -1,5 +1,4 @@
 import { Constructor } from './injector.interface';
-import { generator } from './injector.util';
 
 /**
  * @description Decorator that marks a class as available to be provided and injected as a dependency.
@@ -9,8 +8,6 @@ import { generator } from './injector.util';
 export function Service(): Function {
   return (constructor: Constructor) => {
     return class extends constructor {
-      readonly id = generator.get();
-
       constructor(...args: any[]) {
         super(...args);
       }

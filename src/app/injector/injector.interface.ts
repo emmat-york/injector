@@ -3,17 +3,17 @@ import { Injector } from './injector';
 
 export type Constructor<T = any> = new (...args: any[]) => T;
 
-export type ProviderToken<T = any> = Constructor | InjectionToken<T>;
+export type ProviderToken = Constructor | InjectionToken<unknown>;
 
 export type ProviderConfig =
   | Constructor
-  | { provide: InjectionToken; useClass: Constructor; multi?: boolean }
-  | { provide: InjectionToken; useValue: any; multi?: boolean }
-  | { provide: InjectionToken; useExisting: InjectionToken; multi?: boolean }
+  | { provide: ProviderToken; useClass: Constructor; multi?: boolean }
+  | { provide: ProviderToken; useValue: any; multi?: boolean }
+  | { provide: ProviderToken; useExisting: InjectionToken; multi?: boolean }
   | {
       provide: ProviderToken;
       useFactory: (...args: any[]) => any;
-      deps?: ProviderToken<unknown>[];
+      deps?: ProviderToken[];
       multi?: boolean;
     };
 

@@ -85,19 +85,19 @@ export class Injector {
 
   // Method for resolving a dependency by its token. Determines how to create a value for the token based on its configuration.
   private resolve(token: ProviderToken): void {
-    const providerConfig = this.registeredProviders.get(token);
+    const configByToken = this.registeredProviders.get(token);
 
-    if (!providerConfig) {
+    if (!configByToken) {
       throw new Error(
         `NullInjectorError: No provider for ${getTokenName(token)}. ` + this.name ? `Injector: ${this.name}` : '',
       );
     }
 
-    if (Array.isArray(providerConfig)) {
-      const resolved = providerConfig.map((config) => this.getResolvedSingleProvider(config));
+    if (Array.isArray(configByToken)) {
+      const resolved = configByToken.map((config) => this.getResolvedSingleProvider(config));
       this.resolvers.set(token, resolved);
     } else {
-      this.resolvers.set(token, this.getResolvedSingleProvider(providerConfig));
+      this.resolvers.set(token, this.getResolvedSingleProvider(configByToken));
     }
   }
 

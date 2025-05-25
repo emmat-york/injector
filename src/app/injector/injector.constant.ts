@@ -1,4 +1,4 @@
-export class InjectionToken<T> {
+export class InjectionToken<T = any> {
   readonly uniqueDesc: string;
 
   constructor(uniqueDesc: string) {

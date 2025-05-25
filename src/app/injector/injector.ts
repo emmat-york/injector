@@ -8,8 +8,8 @@ import {
 import { getTokenName, isSingleProvider } from './injector.util';
 
 export class Injector {
-  private readonly registeredProviders = new Map<ProviderToken<unknown>, ProviderConfig | ProviderConfig[]>();
-  private readonly resolvers = new Map<ProviderToken<unknown>, unknown>();
+  private readonly registeredProviders = new Map<ProviderToken, ProviderConfig | ProviderConfig[]>();
+  private readonly resolvers = new Map<ProviderToken, unknown>();
 
   private readonly parent?: Injector;
   private readonly name?: string;
@@ -33,7 +33,7 @@ export class Injector {
 
   // Method to retrieve a resolved dependency by its token. If the dependency is already resolved,
   // it returns the cached value from resolvers. Otherwise, it initiates the resolution process.
-  get<T extends ProviderToken<unknown>, Output extends ExtractOutputValue<T>>(token: T): Output {
+  get<T extends ProviderToken, Output extends ExtractOutputValue<T>>(token: T): Output {
     const providerConfig = this.registeredProviders.get(token);
     const resolver = this.resolvers.get(token);
 
@@ -84,7 +84,7 @@ export class Injector {
   }
 
   // Method for resolving a dependency by its token. Determines how to create a value for the token based on its configuration.
-  private resolve(token: ProviderToken<unknown>): void {
+  private resolve(token: ProviderToken): void {
     const providerConfig = this.registeredProviders.get(token);
 
     if (!providerConfig) {

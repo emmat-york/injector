@@ -1,4 +1,10 @@
-import { Constructor, ExtractOutputValue, ProviderConfig, ProviderToken } from './injector.interface';
+import {
+  Constructor,
+  CreateInjectorConfig,
+  ExtractOutputValue,
+  ProviderConfig,
+  ProviderToken,
+} from './injector.interface';
 import { getTokenName, isSingleProvider } from './injector.util';
 
 export class Injector {
@@ -8,16 +14,16 @@ export class Injector {
   private readonly parent?: Injector;
   private readonly name?: string;
 
-  constructor(config?: { parent?: Injector; name?: string }) {
-    this.parent = config?.parent;
-    this.name = config?.name;
+  constructor(config: { parent?: Injector; name?: string }) {
+    this.parent = config.parent;
+    this.name = config.name;
   }
 
-  static create(config?: { providers?: ProviderConfig[]; parent?: Injector; name?: string }): Injector {
-    const injector = new Injector({ parent: config?.parent, name: config?.name });
+  static create({ providers, parent, name }: CreateInjectorConfig): Injector {
+    const injector = new Injector({ parent, name });
 
-    if (config?.providers && config.providers.length) {
-      for (const providerConfig of config.providers) {
+    if (providers.length) {
+      for (const providerConfig of providers) {
         injector.provide(providerConfig);
       }
     }
@@ -49,9 +55,9 @@ export class Injector {
 
     if (isSingleProvider(providerConfig)) {
       // If config is:
-      // 1. a class (constructor);
-      // 2. config does not have a "multi" field;
-      // 3. "multi" field is false.
+      // 1. A class (constructor);
+      // 2. Config does not have a "multi" field;
+      // 3. "Multi" field is false.
       this.registeredProviders.set(token, providerConfig);
     } else {
       // Multi-provider:

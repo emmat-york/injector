@@ -1,32 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { InjectionToken } from './injector/injector.constant';
-import { Service } from './injector/injector.decorator';
 import { Injector } from './injector/injector';
-
-@Service()
-export class DependencyOne {
-  readonly description = 'Dependency one';
-}
-
-@Service()
-class DependencyTwo {
-  readonly description = 'Dependency two';
-}
-
-@Service()
-class Parent {
-  readonly description = 'Parent';
-
-  constructor(
-    readonly dependencyOne: DependencyOne,
-    readonly dependencyTwo: DependencyTwo,
-  ) {}
-}
-
-const CLASS_TOKEN = new InjectionToken<Parent>('CLASS_TOKEN');
-const VALUE_TOKEN = new InjectionToken<number>('VALUE_TOKEN');
-const FACTORY_TOKEN = new InjectionToken<string>('FACTORY_TOKEN');
-const EXISTING_TOKEN = new InjectionToken<number>('EXISTING_TOKEN');
+import { DependencyOne, DependencyTwo, Parent } from './examples/class.service';
+import { CLASS_TOKEN, EXISTING_TOKEN, FACTORY_TOKEN, VALUE_TOKEN } from './examples/injection-token.constant';
 
 @Component({
   selector: 'app-root',
@@ -40,12 +15,13 @@ export class AppComponent {
     this.init();
   }
 
-  init(): void {
+  private init(): void {
     const injector = Injector.create({
       providers: [
         DependencyOne,
         DependencyTwo,
         { provide: CLASS_TOKEN, useClass: Parent },
+        { provide: VALUE_TOKEN, useValue: 10, multi: true },
         { provide: VALUE_TOKEN, useValue: 20, multi: true },
         { provide: EXISTING_TOKEN, useExisting: VALUE_TOKEN },
       ],
@@ -64,10 +40,9 @@ export class AppComponent {
     });
 
     console.log(
-      injector.get(DependencyTwo), // instance of DependencyTwo class
       injector.get(CLASS_TOKEN), // instance of Parent class
       injector.get(VALUE_TOKEN), // [10, 20]
-      injector.get(FACTORY_TOKEN), // 'Child 2'
+      injector.get(FACTORY_TOKEN), // 'Dependency two'
       injector.get(EXISTING_TOKEN), // [10, 20]
     );
   }

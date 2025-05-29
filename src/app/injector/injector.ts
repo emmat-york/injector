@@ -121,7 +121,13 @@ export class Injector {
   // Creates an instance of a dependency by resolving its constructor dependencies.
   // Uses `Reflect.getMetadata` to retrieve the list of dependencies defined in the constructor
   // and recursively resolves each dependency.
-  private createClassInstance<T extends Constructor, Instance extends InstanceType<T>>(constructor: T): Instance {
+  private createClassInstance<T extends Constructor & { injectable?: true }, Instance extends InstanceType<T>>(
+    constructor: T,
+  ): Instance {
+    if (!constructor.injectable) {
+      throw new Error(`Cannot instantiate class ${constructor.name} because it does not have a @Service decorator.`);
+    }
+
     const depsList: Constructor[] = Reflect.getMetadata('design:paramtypes', constructor) ?? [];
     const resolvedDeps = depsList.map((dependency) => this.get(dependency));
 

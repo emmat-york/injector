@@ -8,6 +8,8 @@ import { Constructor } from './injector.interface';
 export function Service(): Function {
   return (constructor: Constructor) => {
     return class extends constructor {
+      static injectable = true;
+
       constructor(...args: any[]) {
         super(...args);
       }
